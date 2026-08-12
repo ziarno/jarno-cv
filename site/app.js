@@ -157,42 +157,62 @@
      hero, so once the page scrolls by S it sits at top:-S and every hover lands
      S pixels off.
 
-     Two fixes that look right but aren't. A plain mousemove listener can lose,
-     because the library attaches its own from a deferred draw path and may
-     therefore run after ours in the same dispatch. And intercepting the
-     property with an accessor double-corrects, because the library assigns
-     `pos = clientY` and then separately does `pos *= pxratio` -- a
-     read-modify-write that feeds the corrected value back through.
+     The fix that matters is removing the competing writer, because racing it
+     can't be won: the library attaches its listener from a deferred draw path,
+     so registering after it isn't guaranteed; an accessor on pos_x/pos_y
+     double-corrects (the library assigns `pos = clientY`, then separately does
+     `pos *= pxratio` -- a read-modify-write that feeds our value back
+     through); and deferring our write to a later task is too late, since the
+     draw loop reads the position on the next animation frame, which can fire
+     first. That last one is why hover stayed broken while clicks looked fixed:
+     click_pos is copied from an already-settled value.
 
-     So overwrite the value in a *later task*. One event dispatch is one task,
-     so by the time this runs the library's handler has finished regardless of
-     registration order, and it still lands before the next frame paints. The
-     click handler copies from these fields, so pushes follow along. */
+     So point the library at the canvas instead of the window. Its own handler
+     then uses offsetX/offsetY, which are element-relative and therefore correct
+     at any scroll offset -- but it only fires while the pointer is directly over
+     the canvas, and hero text and the photo sit above it. We cover the rest from
+     a window listener writing the same canvas-space value. Both writers now
+     agree, so ordering stops mattering, and the write is synchronous with the
+     event, so it's in place before the frame draws. */
   function correctPointerMapping() {
     var doms = window.pJSDom;
     if (!doms || !doms.length) return false;
     var pJS = doms[doms.length - 1].pJS;
     if (!pJS || !pJS.canvas || !pJS.canvas.el || !pJS.interactivity) return false;
 
-    var pending = null;
+    var canvas = pJS.canvas.el;
+    var mouse = pJS.interactivity.mouse;
 
-    function apply() {
-      if (!pending) return;
-      var canvas = pJS.canvas.el;
+    function toCanvas(ev) {
       var r = canvas.getBoundingClientRect();
-      if (!r.width || !r.height) return;
+      if (!r.width || !r.height) return null;
       // Measured, not read off pJS.retina: the library scales by the device
       // pixel ratio even when that flag reads as unset.
       var ratio = canvas.width / r.width;
-      pJS.interactivity.mouse.pos_x = (pending.x - r.left) * ratio;
-      pJS.interactivity.mouse.pos_y = (pending.y - r.top) * ratio;
-      pJS.interactivity.status = 'mousemove';
+      return { x: (ev.clientX - r.left) * ratio, y: (ev.clientY - r.top) * ratio };
     }
 
     window.addEventListener('mousemove', function (ev) {
-      pending = { x: ev.clientX, y: ev.clientY };
-      setTimeout(apply, 0);
+      var p = toCanvas(ev);
+      if (!p) return;
+      mouse.pos_x = p.x;
+      mouse.pos_y = p.y;
+      pJS.interactivity.status = 'mousemove';
     }, { passive: true });
+
+    // The library only pushes on clicks that land on the canvas itself; keep
+    // click-anywhere by forwarding the rest. Skipping canvas-targeted clicks
+    // avoids pushing twice.
+    window.addEventListener('click', function (ev) {
+      if (ev.target === canvas) return;
+      var p = toCanvas(ev);
+      if (!p) return;
+      mouse.pos_x = p.x;
+      mouse.pos_y = p.y;
+      mouse.click_pos_x = p.x;
+      mouse.click_pos_y = p.y;
+      pJS.fn.modes.pushParticles(pJS.interactivity.modes.push.particles_nb, mouse);
+    });
 
     return true;
   }
@@ -216,7 +236,9 @@
           move: { enable: true, speed: 1.4, direction: 'none', random: true, straight: false, out_mode: 'out' }
         },
         interactivity: {
-          detect_on: 'window',
+          // Deliberately 'canvas', not the design's 'window' -- see
+          // correctPointerMapping above.
+          detect_on: 'canvas',
           events: {
             onhover: { enable: true, mode: 'grab' },
             onclick: { enable: true, mode: 'push' },
