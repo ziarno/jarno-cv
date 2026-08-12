@@ -77,35 +77,6 @@ ul, ol { list-style: none; padding: 0; }
 }
 .js .reveal.is-visible { opacity: 1; transform: translateY(0); }
 
-/* ---------------------------------------------------------------- theme toggle */
-.theme-toggle {
-  position: fixed;
-  top: 22px;
-  right: 22px;
-  z-index: 60;
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  border: 1px solid rgba(var(--ink-rgb), .16);
-  background: rgba(var(--ink-rgb), .05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: var(--heading);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: var(--toggle-shadow);
-  transition: border-color .3s, background .3s, transform .2s;
-}
-.theme-toggle:hover {
-  border-color: rgba(124, 58, 237, .55);
-  background: rgba(124, 58, 237, .14);
-  transform: translateY(-2px);
-}
-.theme-toggle svg { width: 21px; height: 21px; display: block; }
-html:not(.js) .theme-toggle { display: none; }
-
 /* ---------------------------------------------------------------- side nav
    Desktop (>=1024px): a fixed rail; main is inset by its width so the reading
    column stops sprawling. Below that it becomes an off-canvas drawer behind a
@@ -222,6 +193,16 @@ html:not(.js) .theme-toggle { display: none; }
   transform: translateY(-2px);
 }
 .sidenav__icon svg { width: 16px; height: 16px; display: block; }
+
+/* Reuses .sidenav__icon's box/hover; a button needs its own reset plus a shove
+   to the far end of the row so it reads as distinct from the social links. */
+.theme-toggle {
+  margin-left: auto;
+  padding: 0;
+  background: none;
+  font: inherit;
+}
+html:not(.js) .theme-toggle { display: none; }
 
 /* hamburger — drawer control, mobile only */
 .nav-toggle {
@@ -365,6 +346,7 @@ html.nav-open .nav-backdrop { opacity: 1; }
   font-family: var(--mono);
   font-size: clamp(12px, 3.7vw, 22px);
   font-weight: 500;
+  overflow-wrap: anywhere;
   background: linear-gradient(90deg, #22d3ee, #a78bfa, #22d3ee);
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -455,9 +437,9 @@ html.nav-open .nav-backdrop { opacity: 1; }
 .about__content { display: flow-root; }
 .about__photo {
   position: relative;
-  float: right;
+  float: left;
   width: clamp(130px, 15vw, 180px);
-  margin: 4px 0 20px 28px;
+  margin: 4px 28px 20px 0;
 }
 .about__photo-edge {
   position: absolute;
@@ -742,7 +724,10 @@ html.nav-open .nav-backdrop { opacity: 1; }
 }
 
 @media (max-width: 600px) {
-  .glitch { font-size: clamp(30px, 9vw, 46px); letter-spacing: -1px; }
+  /* Sized off the container (not the viewport) so it scales with the text
+     column's actual width and always fits "<SeniorFrontendEngineer />"
+     on one line, instead of the vw-based size that used to overflow it. */
+  .glitch { font-size: clamp(16px, 6cqi, 26px); letter-spacing: -1px; }
   .about__photo { float: none; width: min(46vw, 160px); margin: 0 auto 20px; }
 
   /* "Ledger" timeline: marker beside the content, no card, hairline separators. */
@@ -785,7 +770,7 @@ html.nav-open .nav-backdrop { opacity: 1; }
 }
 
 @media print {
-  .theme-toggle, .hero__particles, .hero__wash, .hero__scroll, .cta,
+  .hero__particles, .hero__wash, .hero__scroll, .cta,
   .sidenav, .nav-toggle, .nav-backdrop { display: none; }
   main { padding-left: 0; }
   body { background: #fff; color: #111; }

@@ -27,6 +27,14 @@
       try { localStorage.setItem('cv-theme', current); } catch (err) { /* private mode */ }
       paint(current);
     });
+
+    // Follow the OS live, but only until the visitor makes an explicit choice.
+    window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function (ev) {
+      var stored; try { stored = localStorage.getItem('cv-theme'); } catch (err) {}
+      if (stored === 'light' || stored === 'dark') return;
+      current = ev.matches ? 'light' : 'dark';
+      paint(current);
+    });
   }
 
   /* ------------------------------------------------------------ side nav
