@@ -29,6 +29,75 @@
     });
   }
 
+  /* ------------------------------------------------------------ side nav
+     Above 1024px the rail is always on screen and the drawer state is inert;
+     below it the same element slides in as a drawer. */
+  function setupNav() {
+    var nav = document.getElementById('sidenav');
+    var toggle = document.querySelector('[data-nav-toggle]');
+    var backdrop = document.querySelector('[data-nav-close]');
+    if (!nav || !toggle || !backdrop) return;
+
+    var root = document.documentElement;
+
+    function setOpen(open) {
+      root.classList.toggle('nav-open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+      backdrop.hidden = !open;
+    }
+
+    setOpen(false);
+    toggle.addEventListener('click', function () {
+      setOpen(!root.classList.contains('nav-open'));
+    });
+    backdrop.addEventListener('click', function () { setOpen(false); });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape' && root.classList.contains('nav-open')) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+    // Any jump closes the drawer so the target is visible right away.
+    nav.addEventListener('click', function (ev) {
+      if (ev.target.closest('a[href^="#"]')) setOpen(false);
+    });
+    // A resize into the desktop rail must not leave the drawer state stuck on.
+    window.matchMedia('(min-width: 1100px)').addEventListener('change', function (ev) {
+      if (ev.matches) setOpen(false);
+    });
+
+    highlightNav();
+  }
+
+  /* Marks the section occupying the middle of the viewport. */
+  function highlightNav() {
+    var links = Array.prototype.slice.call(document.querySelectorAll('[data-navlink]'));
+    if (!links.length || !('IntersectionObserver' in window)) return;
+
+    var pairs = links.map(function (link) {
+      return { link: link, section: document.querySelector(link.getAttribute('href')) };
+    }).filter(function (p) { return p.section; });
+
+    var visible = [];
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        var i = visible.indexOf(entry.target);
+        if (entry.isIntersecting && i === -1) visible.push(entry.target);
+        else if (!entry.isIntersecting && i !== -1) visible.splice(i, 1);
+      });
+      // Later sections win, so scrolling down always lands on the newest one.
+      var active = visible.length ? pairs.filter(function (p) {
+        return visible.indexOf(p.section) !== -1;
+      }).pop() : null;
+      pairs.forEach(function (p) {
+        p.link.classList.toggle('is-active', !!active && p === active);
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+
+    pairs.forEach(function (p) { io.observe(p.section); });
+  }
+
   /* ------------------------------------------------------------ scroll reveals */
   function setupReveals() {
     var targets = document.querySelectorAll('.reveal');
@@ -258,6 +327,7 @@
   }
 
   setupTheme();
+  setupNav();
   setupReveals();
   setupTilt();
   setupCta();
