@@ -150,6 +150,53 @@
   }
 
   /* ------------------------------------------------------------ hero particles */
+
+  /* With detect_on:'window', particles.js maps the pointer's viewport coords
+     straight onto canvas coords. That only holds while the canvas's top-left
+     sits at the viewport's -- and this canvas is absolutely positioned in the
+     hero, so once the page scrolls by S it sits at top:-S and every hover lands
+     S pixels off.
+
+     Two fixes that look right but aren't. A plain mousemove listener can lose,
+     because the library attaches its own from a deferred draw path and may
+     therefore run after ours in the same dispatch. And intercepting the
+     property with an accessor double-corrects, because the library assigns
+     `pos = clientY` and then separately does `pos *= pxratio` -- a
+     read-modify-write that feeds the corrected value back through.
+
+     So overwrite the value in a *later task*. One event dispatch is one task,
+     so by the time this runs the library's handler has finished regardless of
+     registration order, and it still lands before the next frame paints. The
+     click handler copies from these fields, so pushes follow along. */
+  function correctPointerMapping() {
+    var doms = window.pJSDom;
+    if (!doms || !doms.length) return false;
+    var pJS = doms[doms.length - 1].pJS;
+    if (!pJS || !pJS.canvas || !pJS.canvas.el || !pJS.interactivity) return false;
+
+    var pending = null;
+
+    function apply() {
+      if (!pending) return;
+      var canvas = pJS.canvas.el;
+      var r = canvas.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      // Measured, not read off pJS.retina: the library scales by the device
+      // pixel ratio even when that flag reads as unset.
+      var ratio = canvas.width / r.width;
+      pJS.interactivity.mouse.pos_x = (pending.x - r.left) * ratio;
+      pJS.interactivity.mouse.pos_y = (pending.y - r.top) * ratio;
+      pJS.interactivity.status = 'mousemove';
+    }
+
+    window.addEventListener('mousemove', function (ev) {
+      pending = { x: ev.clientX, y: ev.clientY };
+      setTimeout(apply, 0);
+    }, { passive: true });
+
+    return true;
+  }
+
   function setupParticles() {
     var el = document.getElementById('particles-bg');
     if (!el || reduceMotion) return;
@@ -179,6 +226,12 @@
         },
         retina_detect: true
       });
+      // The instance may not be registered yet; retry briefly until it is.
+      var tries = 0;
+      (function patch() {
+        if (correctPointerMapping() || tries++ > 60) return;
+        setTimeout(patch, 100);
+      })();
     })();
   }
 
