@@ -77,12 +77,6 @@
           <a class="btn" href="https://www.linkedin.com/in/filipjarno/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#4aa3ff" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/></svg>LinkedIn</a>
         </div>
       </div>
-      <div class="hero__photo">
-        <span class="hero__photo-edge" aria-hidden="true"></span>
-        <div class="hero__photo-frame">
-          <img src="assets/filip-jarno.jpg" width="722" height="760" alt="Portrait of Filip Jarno" fetchpriority="high" decoding="async">
-        </div>
-      </div>
     </div>
     <p class="hero__scroll" aria-hidden="true">SCROLL ↓</p>
   </header>
@@ -90,8 +84,18 @@
   <!-- ABOUT -->
   <section class="section" id="about" aria-labelledby="about-h">
     <h2 class="section__label reveal" id="about-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>01 / ABOUT</h2>
-    <p class="about__lead reveal" style="--reveal-delay:.08s">A self-taught frontend developer who shipped his first website at <span class="hl-cyan">16</span> — and has spent the decade since turning ambitious ideas into <span class="hl-purple">fast, resilient</span> web and mobile apps.</p>
-    <p class="about__body reveal" style="--reveal-delay:.16s">My focus is frontend — React, React Native, and Vue — but I'm just as comfortable reaching into the backend with Node.js, SQL, and NoSQL when a feature needs it. I love learning new technologies, untangling complex problems with creative solutions, and mentoring the people who build alongside me. Always up for a new challenge, a good collaboration, and room to grow. Off the keyboard I try to do some kind of sport every day — tennis, running, swimming, biking — and I unwind with a bit of PC gaming.</p>
+    <div class="about__content">
+      <div class="about__photo reveal" style="--reveal-delay:.04s">
+        <span class="about__photo-edge" aria-hidden="true"></span>
+        <div class="about__photo-frame">
+          <img src="assets/filip-jarno.jpg" width="722" height="760" alt="Portrait of Filip Jarno" loading="lazy" decoding="async">
+        </div>
+      </div>
+      <p class="about__lead reveal" style="--reveal-delay:.08s">A self-taught frontend developer who shipped his first website at <span class="hl-cyan">16</span> — and has spent the decade since turning ambitious ideas into <span class="hl-purple">fast, resilient</span> web and mobile apps.</p>
+      <p class="about__body reveal" style="--reveal-delay:.16s">My focus is frontend — React, React Native, and Vue — but I'm just as comfortable reaching into the backend with Node.js, SQL, and NoSQL when a feature needs it.</p>
+      <p class="about__body reveal" style="--reveal-delay:.22s">I love learning new technologies, untangling complex problems with creative solutions, and mentoring the people who build alongside me. Always up for a new challenge, a good collaboration, and room to grow.</p>
+      <p class="about__body reveal" style="--reveal-delay:.28s">Off the keyboard I try to do some kind of sport every day — tennis, running, swimming, biking — and I unwind with a bit of PC gaming.</p>
+    </div>
   </section>
 
   <!-- EXPERIENCE -->
