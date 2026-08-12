@@ -1,0 +1,18 @@
+services:
+  cv:
+    build: .
+    image: jarno-cv:latest
+    container_name: jarno-cv
+    restart: unless-stopped
+    # Published on loopback only — put a reverse proxy (Caddy/Traefik/nginx) in
+    # front of this on the server to terminate TLS. Change to "8080:8080" to
+    # expose it directly.
+    ports:
+      - "127.0.0.1:8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    security_opt:
+      - no-new-privileges:true

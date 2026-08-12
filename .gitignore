@@ -1,1 +1,6 @@
 .idea
+.DS_Store
+
+# Claude Design handoff bundle — reference only; the assets it provides are
+# copied into site/assets/. Re-export from claude.ai/design if needed.
+/design-src
