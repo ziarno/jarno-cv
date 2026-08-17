@@ -11,3 +11,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build and run
         run: docker compose up -d --build
+
+      # Builds run on the self-hosted runner (this server), so BuildKit cache
+      # accumulates locally on every push and is never reclaimed on its own.
+      # Backstop only: the daemon-level cap in /etc/docker/daemon.json is the
+      # primary limit. Runs even if the build failed, so a broken build can't
+      # leave cache behind.
+      - name: Trim build cache
+        if: always()
+        run: docker builder prune -f --filter until=168h
