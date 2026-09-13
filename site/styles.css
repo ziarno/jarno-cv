@@ -201,6 +201,7 @@ ul, ol { list-style: none; padding: 0; }
   padding: 0;
   background: none;
   font: inherit;
+  cursor: pointer;
 }
 html:not(.js) .theme-toggle { display: none; }
 
