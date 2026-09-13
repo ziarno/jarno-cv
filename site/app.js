@@ -78,32 +78,52 @@
     highlightNav();
   }
 
-  /* Marks the section occupying the middle of the viewport. */
+  /* Marks the nav link for whichever section's top has crossed a line 45%
+     down the viewport -- i.e. the last section heading the visitor has
+     scrolled past. Driven by actual scroll position (not a thin
+     IntersectionObserver band) so a section short enough to be skipped
+     between two frames of a fast trackpad scroll is never missed, and the
+     last section is forced active once the page is scrolled to its end --
+     a short final section might otherwise never reach far enough up the
+     viewport to cross the line on a tall screen. */
   function highlightNav() {
     var links = Array.prototype.slice.call(document.querySelectorAll('[data-navlink]'));
-    if (!links.length || !('IntersectionObserver' in window)) return;
+    if (!links.length) return;
 
     var pairs = links.map(function (link) {
       return { link: link, section: document.querySelector(link.getAttribute('href')) };
     }).filter(function (p) { return p.section; });
+    if (!pairs.length) return;
 
-    var visible = [];
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        var i = visible.indexOf(entry.target);
-        if (entry.isIntersecting && i === -1) visible.push(entry.target);
-        else if (!entry.isIntersecting && i !== -1) visible.splice(i, 1);
-      });
-      // Later sections win, so scrolling down always lands on the newest one.
-      var active = visible.length ? pairs.filter(function (p) {
-        return visible.indexOf(p.section) !== -1;
-      }).pop() : null;
+    var queued = false;
+
+    function update() {
+      queued = false;
+      var doc = document.documentElement;
+      var atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - 1;
+      var line = window.innerHeight * 0.45;
+
+      var active = null;
       pairs.forEach(function (p) {
-        p.link.classList.toggle('is-active', !!active && p === active);
+        if (p.section.getBoundingClientRect().top <= line) active = p;
       });
-    }, { rootMargin: '-45% 0px -45% 0px' });
+      if (atBottom) active = pairs[pairs.length - 1];
 
-    pairs.forEach(function (p) { io.observe(p.section); });
+      pairs.forEach(function (p) {
+        p.link.classList.toggle('is-active', p === active);
+      });
+    }
+
+    function onScrollOrResize() {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    window.addEventListener('load', onScrollOrResize);
+    update();
   }
 
   /* ------------------------------------------------------------ scroll reveals */
